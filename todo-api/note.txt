@@ -1,0 +1,379 @@
+Voici le code complet pour `AuthController.php` avec toutes les méthodes nécessaires pour l'authentification API (register, login, logout, user) :
+
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+
+class AuthController extends Controller
+{
+    /**
+     * Enregistrement d'un nouvel utilisateur
+     */
+    public function register(Request $request)
+    {
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::create([
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'password' => Hash::make($validatedData['password']),
+        ]);
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $user
+        ], 201);
+    }
+
+    /**
+     * Connexion de l'utilisateur
+     */
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['Les identifiants sont incorrects.'],
+            ]);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $user
+        ]);
+    }
+
+    /**
+     * Déconnexion (révoque le token)
+     */
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'message' => 'Déconnexion réussie'
+        ]);
+    }
+
+    /**
+     * Récupère les infos de l'utilisateur connecté
+     */
+    public function user(Request $request)
+    {
+        return response()->json($request->user());
+    }
+}
+```
+
+### Configuration complémentaire nécessaire :
+
+1. **Modèle User** : Assure-toi que ton modèle `User.php` utilise `HasApiTokens` :
+
+```php
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable;
+    // ...
+}
+```
+
+2. **Routes API** : Dans `routes/api.php` :
+
+```php
+use App\Http\Controllers\AuthController;
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'user']);
+});
+```
+
+3. **CORS** : Configure ton middleware CORS si tu fais des requêtes depuis un frontend :
+
+```php
+// Dans app/Http/Kernel.php
+'api' => [
+    \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+    'throttle:api',
+    \Illuminate\Routing\Middleware\SubstituteBindings::class,
+    \Fruitcake\Cors\HandleCors::class, // Si tu utilises le package CORS
+],
+```
+
+### Tests avec Postman :
+
+1. **Register** :
+   - Méthode : POST
+   - URL : `http://localhost:8000/api/register`
+   - Body (raw JSON) :
+     ```json
+     {
+         "name": "Test User",
+         "email": "test@example.com",
+         "password": "password",
+         "password_confirmation": "password"
+     }
+     ```
+
+2. **Login** :
+   - Méthode : POST
+   - URL : `http://localhost:8000/api/login`
+   - Body :
+     ```json
+     {
+         "email": "test@example.com",
+         "password": "password"
+     }
+     ```
+
+3. **User Profile** :
+   - Méthode : GET
+   - URL : `http://localhost:8000/api/user`
+   - Headers :
+     ```
+     Authorization: Bearer [votre_token]
+     Accept: application/json
+     ```
+
+4. **Logout** :
+   - Méthode : POST
+   - URL : `http://localhost:8000/api/logout`
+   - Headers : Même format que pour /user
+
+Ce code fournit une authentification API complète avec Laravel Sanctum, prête à être utilisée avec un frontend JavaScript (Vue/React) ou mobile.
+
+Voici une explication détaillée du code de l'authentification API avec Laravel Sanctum :
+
+---
+
+### **1. Structure de Base du Controller**
+
+Le `AuthController` contient 4 méthodes principales pour gérer le cycle complet d'authentification :
+
+1. **Register** - Création de compte
+2. **Login** - Connexion
+3. **Logout** - Déconnexion
+4. **User** - Récupération des infos utilisateur
+
+---
+
+### **2. Méthode Register**
+
+```php
+public function register(Request $request)
+{
+    // Validation des données
+    $validatedData = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users',
+        'password' => 'required|string|min:8|confirmed',
+    ]);
+
+    // Création de l'utilisateur
+    $user = User::create([
+        'name' => $validatedData['name'],
+        'email' => $validatedData['email'],
+        'password' => Hash::make($validatedData['password']),
+    ]);
+
+    // Génération du token
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    // Réponse JSON
+    return response()->json([
+        'access_token' => $token,
+        'token_type' => 'Bearer',
+        'user' => $user
+    ], 201);
+}
+```
+
+**Fonctionnement :**
+1. Validation des champs avec règles spécifiques
+2. Hachage du mot de passe avec bcrypt via `Hash::make()`
+3. Création d'un token d'accès avec Sanctum
+4. Retourne le token et les infos utilisateur
+
+**Points clés :**
+- `password_confirmation` requis pour la validation
+- Code HTTP 201 pour "Created"
+- Token valable jusqu'à revocation
+
+---
+
+### **3. Méthode Login**
+
+```php
+public function login(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user || !Hash::check($request->password, $user->password)) {
+        throw ValidationException::withMessages([
+            'email' => ['Les identifiants sont incorrects.'],
+        ]);
+    }
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'access_token' => $token,
+        'token_type' => 'Bearer',
+        'user' => $user
+    ]);
+}
+```
+
+**Fonctionnement :**
+1. Vérification basique des credentials
+2. Recherche de l'utilisateur par email
+3. Comparaison des mots de passe avec `Hash::check()`
+4. Génération d'un nouveau token à chaque connexion
+
+**Sécurité :**
+- Message d'erreur générique pour éviter l'énumération
+- Nouveau token à chaque connexion (invalide les anciens)
+
+---
+
+### **4. Méthode Logout**
+
+```php
+public function logout(Request $request)
+{
+    $request->user()->currentAccessToken()->delete();
+
+    return response()->json([
+        'message' => 'Déconnexion réussie'
+    ]);
+}
+```
+
+**Fonctionnement :**
+- Supprime le token utilisé pour la requête actuelle
+- L'utilisateur doit être authentifié (middleware `auth:sanctum`)
+
+**Important :**
+- N'affecte pas les autres tokens de l'utilisateur
+- Pour déconnecter tous les devices : `$request->user()->tokens()->delete()`
+
+---
+
+### **5. Méthode User**
+
+```php
+public function user(Request $request)
+{
+    return response()->json($request->user());
+}
+```
+
+**Utilité :**
+- Permet au frontend de récupérer les infos de l'utilisateur connecté
+- Accès protégé par le middleware Sanctum
+
+---
+
+### **Configuration Requise**
+
+**1. Modèle User :**
+```php
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable;
+}
+```
+- `HasApiTokens` permet la gestion des tokens Sanctum
+
+**2. Routes API :**
+```php
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'user']);
+});
+```
+- Protection des routes sensibles avec `auth:sanctum`
+
+**3. Middleware CORS :**
+Nécessaire pour les appels depuis un frontend séparé :
+```php
+// Dans app/Http/Kernel.php
+'api' => [
+    \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+    'throttle:api',
+    \Illuminate\Routing\Middleware\SubstituteBindings::class,
+    \Fruitcake\Cors\HandleCors::class,
+],
+```
+
+---
+
+### **Flow d'Authentification**
+
+1. **Inscription**  
+   `POST /api/register` → Crée le compte + retourne token
+
+2. **Connexion**  
+   `POST /api/login` → Vérifie credentials + retourne token
+
+3. **Requêtes Authentifiées**  
+   Header : `Authorization: Bearer <token>`
+
+4. **Déconnexion**  
+   `POST /api/logout` → Supprime le token actuel
+
+---
+
+### **Bonnes Pratiques**
+
+1. **Sécurité :**
+   - Toujours utiliser HTTPS
+   - Stocker les tokens côté client (HttpOnly cookies ou Secure Storage)
+   - Limiter la durée de vie des tokens
+
+2. **Extensions Possibles :**
+   - Ajouter des rôles/permissions
+   - Mettre en place le refresh token
+   - Journaliser les connexions
+
+3. **Tests :**
+   - Vérifier les cas d'erreur (mauvais credentials, token expiré)
+   - Tester les contraintes de validation
+
+Ce système fournit une base solide et sécurisée pour l'authentification API, conforme aux standards modernes (OAuth2-like).
