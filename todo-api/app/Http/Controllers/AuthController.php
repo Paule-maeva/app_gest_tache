@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User; // Correction : 'App' avec A majuscule
+use App\Models\User; 
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -15,8 +15,8 @@ class AuthController extends Controller
         // Validation des données envoyées via HTTP
         $validatedData = $request->validate([
             'name' => 'required',
-            'email' => 'required',
-            'password' => 'required',
+            'email' => 'required|email', // 'unique' pour vérifier l'unicité de l'email
+            'password' => 'required', // 'confirmed' pour vérifier le mot de passe
         ]);
 
         // Création d'un utilisateur

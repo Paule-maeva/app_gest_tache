@@ -26,4 +26,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     Route::post('/logout', [AuthController::class, 'logout']);
+
+//   CRUD des tâches
+Route::get('/tasks', [TaskController::class, 'index']);            // Liste des tâches
+Route::post('/tasks', [TaskController::class, 'store']);           // Créer une tâche
+Route::put('/tasks/{id}', [TaskController::class, 'update']);      // Modifier une tâche
+Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);  // Supprimer une tâche
+Route::patch('/tasks/{id}/toggle', [TaskController::class, 'toggle']); // Terminer / Annuler
+ 
+
 });
