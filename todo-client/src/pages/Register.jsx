@@ -11,7 +11,7 @@ export default function RegisterForm() {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+   
 
   const navigate = useNavigate();
 
@@ -32,8 +32,8 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-600 to-indigo-900 min-h-screen flex items-center justify-center">
-      <div className="bg-white rounded-3xl shadow-lg flex w-[900px] max-w-full overflow-hidden">
+    <div className="bg-white from-purple-600 to-indigo-900 min-h-screen flex items-center justify-center">
+      <div className="bg-white rounded-3xl shadow-lg flex w-[800px] max-w-full overflow-hidden ml-70">
         {/* Left Side with Image */}
         <div className="w-1/2 bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center p-6">
           <img
@@ -82,28 +82,11 @@ export default function RegisterForm() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 text-purple-600 cursor-pointer"
               >
-                {showPassword ? '👁️' : '🙈'}
+                {showPassword ? '👁️' : '🔒'}
               </span>
             </div>
 
-            {/* Password Confirmation */}
-            <div className="relative">
-              <input
-                type={showConfirm ? 'text' : 'password'}
-                name="password_confirmation"
-                placeholder="Confirmer mot de passe"
-                value={form.password_confirmation}
-                onChange={handleChange}
-                required
-                className="w-full border-b-2 border-purple-500 focus:outline-none focus:border-purple-700 py-2 pr-10"
-              />
-              <span
-                onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-purple-600 cursor-pointer"
-              >
-                {showConfirm ? '👁️' : '🙈'}
-              </span>
-            </div>
+            
 
             <button
               type="submit"

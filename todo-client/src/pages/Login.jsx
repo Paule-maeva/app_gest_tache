@@ -5,6 +5,7 @@ import api from '../apiClient/axios';
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,11 +23,11 @@ export default function LoginForm() {
 
   return (
     <div className="bg-white from-purple-600 to-indigo-900 min-h-screen flex items-center justify-center">
-      <div className="bg-white rounded-3xl shadow-lg flex w-[900px] max-w-full overflow-hidden ml-50">
+      <div className="bg-white rounded-3xl shadow-lg flex w-[700px] max-w-full overflow-hidden ml-80">
         {/* Left Side with Image */}
         <div className="w-1/2 bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center p-6">
           <img
-            src="/2756685.jpg" // Mets ici le bon chemin ou fais un import
+            src="/2756685.jpg"
             alt="Illustration"
             className="w-full h-full object-cover rounded-l-3xl"
           />
@@ -45,20 +46,33 @@ export default function LoginForm() {
               required
               className="w-full border-b-2 border-purple-500 focus:outline-none focus:border-purple-700 py-2"
             />
-            <input
-              type="password"
-              placeholder="Mot de passe"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full border-b-2 border-purple-500 focus:outline-none focus:border-purple-700 py-2"
-            />
+
+            {/* Mot de passe avec icône œil */}
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Mot de passe"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full border-b-2 border-purple-500 focus:outline-none focus:border-purple-700 py-2 pr-10"
+              />
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer text-2xl text-purple-600"
+                title={showPassword ? 'Masquer' : 'Afficher'}
+              >
+               {showPassword ? '👁️' : '🔒'}
+              </span>
+            </div>
+
             <button
               type="submit"
               className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-full hover:from-purple-700 hover:to-indigo-700 transition"
             >
               Connexion
             </button>
+
             <div className="flex justify-between text-sm text-purple-600 mt-3">
               <a href="#" className="hover:underline">Créer un compte</a>
               <a href="#" className="hover:underline">Mot de passe oublié ?</a>
