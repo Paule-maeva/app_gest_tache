@@ -3,13 +3,38 @@ import axios from 'axios';
 
 const TaskItem = ({ task, refreshTasks }) => {
   const toggleTask = async () => {
-    await axios.patch(`http://localhost:8000/api/tasks/${task.id}/toggle`, {}, { withCredentials: true });
-    refreshTasks();
+    try {
+      await axios.patch(
+        `http://localhost:8000/api/tasks/${task.id}/toggle`, 
+        {},
+        { 
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
+      refreshTasks();
+    } catch (err) {
+      console.error('Erreur lors de la modification de l\'état de la tâche', err);
+    }
   };
 
   const deleteTask = async () => {
-    await axios.delete(`http://localhost:8000/api/tasks/${task.id}`, { withCredentials: true });
-    refreshTasks();
+    try {
+      await axios.delete(
+        `http://localhost:8000/api/tasks/${task.id}`, 
+        { 
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
+      refreshTasks();
+    } catch (err) {
+      console.error('Erreur lors de la suppression de la tâche', err);
+    }
   };
 
   return (
@@ -20,10 +45,18 @@ const TaskItem = ({ task, refreshTasks }) => {
         </p>
       </div>
       <div className="flex gap-2">
-        <button onClick={toggleTask} className="bg-green-500 text-white px-2 py-1 rounded">
+        <button 
+          onClick={toggleTask} 
+          className={`px-2 py-1 rounded ${task.completed ? 'bg-gray-500' : 'bg-green-500'} text-black`}
+        >
           {task.completed ? 'Non terminé' : 'Terminé'}
         </button>
-        <button onClick={deleteTask} className="bg-red-500 text-white px-2 py-1 rounded">Supprimer</button>
+        <button onClick={deleteTask} className="bg-red-500 text-black px-2 py-1 rounded">
+          Supprimer
+        </button>
+        <button onClick={deleteTask} className="bg-yellow-500 text-black px-2 py-1 rounded">
+        modifier
+        </button>
       </div>
     </div>
   );

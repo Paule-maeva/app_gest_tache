@@ -75,6 +75,7 @@ export default function LoginForm() {
 
             <div className="flex justify-between text-sm text-purple-600 mt-3">
               <a href="#" className="hover:underline">Créer un compte</a>
+            
               <a href="#" className="hover:underline">Mot de passe oublié ?</a>
             </div>
           </form>

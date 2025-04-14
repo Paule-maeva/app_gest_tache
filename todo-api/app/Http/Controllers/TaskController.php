@@ -45,4 +45,20 @@ class TaskController extends Controller
         $task->save();
         return $task;
     }
+
+    public function stats(Request $request)
+{
+    $userId = $request->user()->id;
+
+    $total = Task::where('user_id', $userId)->count();
+    $completed = Task::where('user_id', $userId)->where('completed', true)->count();
+    $pending = $total - $completed;
+
+    return response()->json([
+        'total' => $total,
+        'completed' => $completed,
+        'pending' => $pending
+    ]);
+}
+
 }

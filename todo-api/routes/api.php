@@ -34,6 +34,7 @@ Route::post('/tasks', [TaskController::class, 'store']);           // Créer une
 Route::put('/tasks/{id}', [TaskController::class, 'update']);      // Modifier une tâche
 Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);  // Supprimer une tâche
 Route::patch('/tasks/{id}/toggle', [TaskController::class, 'toggle']); // Terminer / Annuler
- 
+Route::get('/tasks/stats', [TaskController::class, 'stats']);
+
 
 });
